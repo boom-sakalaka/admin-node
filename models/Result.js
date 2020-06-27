@@ -1,4 +1,4 @@
-const { CODE_ERROR, CODE_SUCCESS } = require('../utils/constant')
+const { CODE_ERROR, CODE_SUCCESS,CODE_TOKEN_EXPIRED } = require('../utils/constant')
 
 class Rusult {
   constructor(data,msg='操作成功',options){
@@ -30,7 +30,7 @@ class Rusult {
     if(this.options){
       base = {...base,...this.options}
     }
-    console.log(base);
+    //console.log(base);
     return base
   }
 
@@ -43,6 +43,10 @@ class Rusult {
   }
   fail(res) {
     this.code = CODE_ERROR
+    this.json(res)
+  }
+  expired(res) {
+    this.code = CODE_TOKEN_EXPIRED
     this.json(res)
   }
 }

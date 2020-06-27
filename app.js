@@ -23,7 +23,7 @@ const credentials = { key: privateKey, cert: certificate }
 const httpsServer = https.createServer(credentials, app)
 const SSLPORT = 18082
 httpsServer.listen(SSLPORT, () => {
-  const { address, port } = server.address();
+  const { address, port } = httpsServer.address();
   console.log("Http Server is running on https://", address, port);
 })
 
