@@ -1,6 +1,7 @@
 const { MIME_TYPE_EPUB,UPLOAD_URL,UPLOAD_PATH } = require('../utils/constant')
 const Epub = require('../utils/epub')
 const fs = require('fs')
+const { runInThisContext } = require('vm')
 class Book {
   constructor(file, data){
     if (file) {
@@ -45,6 +46,7 @@ class Book {
     this.publisher = '' // 出版社
     this.contents = [] // 目录
     this.cover = '' // 封面图片URL
+    this.coverPath = '' // 封面图片路径
     this.category = -1 // 分类ID
     this.categoryText = '' // 分类名称
     this.language = '' // 语种
@@ -86,13 +88,63 @@ class Book {
           if(err){
             reject(err)
           }else{
-            console.log(epub.metadata)
-            resolve(this)
+            //console.log(epub.metadata)
+            const {
+              language,
+              creator,
+              creatorFileAs,
+              title,
+              cover,
+              publisher,
+            } = epub.metadata
+            if(!title){
+              reject(new Error('图书标题为空'))
+            }else{
+              this.title = title
+              this.language = language || 'en'
+              this.author = creator || creatorFileAs || 'unknown'
+              this.publisher = publisher || 'unknown'
+              this.rootFile = epub.rootFile
+
+              try{
+                this.unzip()
+              }catch(err){
+                reject(err)
+              }
+              const handleGetImage = (err,file,mimetype) => {
+               // file data对象
+               if(err){
+                 reject(err)
+               }else{
+                const suffix = mimetype.split('/')[1]
+                const coverPath = `${UPLOAD_PATH}/img/${this.fileName}.${suffix}`
+                const coverUrl = `${UPLOAD_URL}/img/${this.fileName}.${suffix}`
+                this.coverPath = `img/${this.fileName}.${suffix}`
+                this.coverUrl = coverUrl
+                fs.writeFileSync(coverPath,file,'binary')
+                resolve(this)
+               }
+              }
+              epub.getImage(cover,handleGetImage)
+            }
+           
           }
         })
         epub.parse()
       }
     })
+  }
+  unzip() {
+    const AdmZip = require('adm-zip')
+    const zip = new AdmZip(Book.genPath(this.path))
+    zip.extractAllTo(Book.genPath(this.unzipPath),true)
+  }
+
+  static genPath(path){
+    if(!path.startsWith('/')){
+      path = `/${path}`
+    }
+    return `${UPLOAD_PATH}${path}`
   }
 }
 

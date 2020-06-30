@@ -753,7 +753,15 @@ class EPub extends EventEmitter {
 
             this.getFile(id, callback);
         } else {
-            callback(new Error("File not found"));
+            const coverId = Object.keys(this.manifest).find(key => {
+                // console.log(key,this.manifest[key])
+                this.manifest[key].properties === 'cover-image'
+            })
+            if(coverId){
+                this.getFile(coverId,callback)
+            }else{
+                callback(new Error("File not found"));
+            }
         }
     };
 
