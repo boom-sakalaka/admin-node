@@ -15,7 +15,7 @@ multer({ dest: `${UPLOAD_PATH}/book` }).single('file'),
   }else{
     const book = new Book(req.file)
     book.parse().then(book => {
-      console.log('112321' + JSON.stringify(book,null,4))
+      //console.log('112321' + JSON.stringify(book,null,4))
       new Rusult('上传电子书成功').success(res)
     }).catch(err => {
       next(boom.badImplementation(err))
