@@ -112,7 +112,10 @@ class Book {
 
               try{
                 this.unzip()
-                this.parseContents(epub)
+                this.parseContents(epub).then(({chapters}) => {
+                  this.contents = chapters
+                  epub.getImage(cover,handleGetImage)
+                })
               }catch(err){
                 reject(err)
               }
@@ -130,9 +133,7 @@ class Book {
                 resolve(this)
                }
               }
-              epub.getImage(cover,handleGetImage)
             }
-           
           }
         })
         epub.parse()
@@ -157,21 +158,35 @@ class Book {
         return manifest[id].href
       }
     }
-    function findParent (array) {
+    function findParent (array,level = 0,pid = '') {
       return array.map(item => {
+        item.level = level
+        item.pid = pid
+        if(item.navPoint && item.navPoint.length){
+          item.navPoint = findParent(item.navPoint,level + 1 , item['$'].id)
+        }else if(item.navPoint){
+          item.navPoint.level = level + 1
+          item.navPoint.pid = item['$'].id
+        }
         return item
       })
     }
     function flatten (array){
       return [].concat(...array.map(item => {
+        if(item.navPoint && item.navPoint.length){
+          return [].concat(item, ...flatten(item.navPoint))
+        }else if(item.navPoint){
+          return [].concat(item,item.navPoint)
+        }
         return item
       }))
     }
     const ncxFilePath = Book.genPath(`${this.unzipPath}/${getNcxFilePath()}`)
-    console.log(ncxFilePath)
+    // console.log(ncxFilePath)
     if(fs.existsSync(ncxFilePath)){
       return new Promise((resolve,reject) => {
         const xml = fs.readFileSync(ncxFilePath,'utf-8')
+        const fileName = this.fileName
         xml2js(xml,{
           explicitArray: false,
           ignoreAttrs: false
@@ -181,7 +196,7 @@ class Book {
           }else{
             // console.log('xml',json)
             const navMap = json.ncx.navMap
-            console.log('mav'+ JSON.stringify(navMap,null,4))
+            // console.log('mav'+ JSON.stringify(navMap,null,4))
             if(navMap.navPoint && navMap.navPoint.length){
               navMap.navPoint = findParent(navMap.navPoint)
               const newNavMap = flatten(navMap.navPoint)
@@ -192,7 +207,19 @@ class Book {
                 }
                 const nav = newNavMap[index]
                 chapter.text = `${UPLOAD_URL}/unzip/${fileName}/${chapter.href}`
+                if(nav && nav.navLabel){
+                  chapter.label = nav.navLabel.text || ''
+                }else{
+                  chapter.label = ''
+                }
+                chapter.level = nav.level
+                chapter.pid = nav.pid
+                chapter.navId = nav['$'].id
+                chapter.fileName = fileName
+                chapter.order = index + 1
+                chapters.push(chapter)
               })
+             resolve({chapters})
             }else {
               reject(new Error('目录解析失败，目录数为零'))
             }
