@@ -77,8 +77,10 @@ class Book {
     this.createUser = data.username
     this.createDt = new Date().getTime()
     this.updateDt = new Date().getTime()
-    this.updateType = data.updateType === 0 ? data.updateType : UPDATE_TYPE_FROM_WEB
+    this.updateType = data.updateType === 0 ? data.updateType : 1
     this.contents = data.contents
+    this.category = data.category || 99
+    this.categoryText = data.categoryText || '自定义'
   }
   parse() {
     return new Promise((resolve,reject) => {
