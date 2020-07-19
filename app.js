@@ -5,8 +5,12 @@ const https = require('https')
 const bodyParser = require('body-parser')
 const cors = require('cors')
 
+
 // 创建 express 应用
 const app = express();
+
+app.use(bodyParser.json({limit: '10mb'}));
+app.use(bodyParser.urlencoded({limit: '10mb', extended: true}));
 
 // 使用cors解决跨域问题
 app.use(cors())

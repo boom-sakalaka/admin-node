@@ -78,7 +78,7 @@ class Book {
     this.createDt = new Date().getTime()
     this.updateDt = new Date().getTime()
     this.updateType = data.updateType === 0 ? data.updateType : 1
-    this.contents = data.contents
+    this.contents = data.contents || []
     this.category = data.category || 99
     this.categoryText = data.categoryText || '自定义'
   }
@@ -193,6 +193,7 @@ class Book {
         const xml = fs.readFileSync(ncxFilePath,'utf-8')
         const dir = path.dirname(ncxFilePath).replace(UPLOAD_PATH,'')
         const fileName = this.fileName
+        const unzipPath = this.unzipPath
         xml2js(xml,{
           explicitArray: false,
           ignoreAttrs: false
@@ -214,6 +215,8 @@ class Book {
                 chapter.navId = chapter['$'].id
                 chapter.fileName = fileName
                 chapter.order = index + 1
+                chapter.href = `${dir}/${src}`.replace(unzipPath, '')
+                chapter.id = `${src}`
                 chapters.push(chapter)
               })
               const chapterTree = []
@@ -240,12 +243,61 @@ class Book {
     }
   }
 
+  toDb() {
+    return {
+      fileName : this.fileName,
+      cover : this.coverPath,
+      title : this.title,
+      author : this.author,
+      publisher : this.publisher,
+      bookId : this.fileName,
+      language : this.language,
+      rootFile : this.rootFile,
+      originalName : this.originalName,
+      filePath : this.filePath,
+      unzipPath : this.unzipPath,
+      coverPath : this.coverPath,
+      createUser : this.createUser,
+      createDt : this.createDt,
+      updateDt : this.updateDt,
+      updateType : this.updateType,
+      category : this.category,
+      categoryText : this.categoryText,
+    }
+  }
+  getContents() {
+    return this.contents
+  }
+
+  reset() {
+    // 判读文件 封面 解压文件是否存在 
+    if(Book.pathExiste(this.filePath)){
+      fs.unlinkSync(Book.genPath(this.filePath))
+    }
+    if(Book.pathExiste(this.coverPath)){
+      // console.log('删除图片')
+      fs.unlinkSync(Book.genPath(this.coverPath))
+    }
+    if(Book.pathExiste(this.unzipPath)){
+      // console.log('删除解压文件') 低版本node中 不支持recursive这个属性
+      fs.rmdirSync(Book.genPath(this.unzipPath), { recursive: true })
+    }
+  }
   static genPath(path){
     if(!path.startsWith('/')){
       path = `/${path}`
     }
     return `${UPLOAD_PATH}${path}`
   }
+
+  static pathExiste(path){
+    if(path.startsWith(UPLOAD_PATH)){
+      return fs.existsSync(path)
+    }else {
+      return fs.existsSync(Book.genPath(path))
+    }
+  }
+
 }
 
 

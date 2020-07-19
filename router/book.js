@@ -7,7 +7,9 @@ const Book = require('../models/Book')
 const boom = require('boom');
 const { json } = require("body-parser");
 const { decode } = require('../utils')
-const bookService = require('../services/book')
+const bookService = require('../services/book');
+const { Result } = require("express-validator");
+const { response } = require("express");
 
 router.post('/upload',
 multer({ dest: `${UPLOAD_PATH}/book` }).single('file'),
@@ -32,8 +34,8 @@ router.post('/create', (req, res, next) => {
     req.body.username = username
   }
   const book = new Book(null,req.body)
-  bookService.insertBook(book).then(res => {
-   
+  bookService.insertBook(book).then(response => {
+    new Rusult('添加电子书成功').success(res)
   }).catch(err => {
     next(boom.badImplementation(err))
   })

@@ -1,16 +1,49 @@
 const Book = require('../models/Book')
 const db = require('../db')
+const constant = require('../utils/constant')
+const { constants } = require('crypto')
+const { json } = require('express')
+const _ = require('lodash')
+
 function exists (book) {
-  
+  const { title, author, publisher } = book
+  const sql = `select * from book where title='${title}' and author='${author}' and publisher='${publisher}'`
+  return db.queryOne(sql)
 }
 
-function removeBook (book) {
-
+async function removeBook (book) {
+  if(book){
+    book.reset()
+    if(book.fileName){
+      const removeBookSql = `delete from book where fileName='${book.fileName}'`
+      const removeContentsSql = `delete from contents where fileName='${book.fileName}'`
+      await db.querySql(removeBookSql)
+      await db.querySql(removeContentsSql)
+    }
+  }
 }
 
 //创建电子书目录
-function insertContents (book) {
-
+async function insertContents (book) {
+  const contents = book.getContents()
+  if(contents && contents.length){
+    for(let i = 0; i< contents.length; i++) {
+      const content = contents[i]
+      const _content = _.pick(content, [
+        'fileName',
+        'id',
+        'href',
+        'order',
+        'level',
+        'label',
+        'pid',
+        'navId'
+      ])
+      //console.log(_content)
+      await db.insert(_content, 'contents')
+    }
+  }
+  return true
 }
 
 function insertBook(book){
@@ -22,15 +55,15 @@ function insertBook(book){
           await removeBook(book)
           reject(new Error('电子书已经存在'))
         }else {
-          await db.insert(book, 'book')
+          await db.insert(book.toDb(), 'book')
           await insertContents(book)
           resolve()
         }
       }else{
-        reject(new Error('添加的图书不合法'))
+        reject(err)
       }
     } catch(err){
-      reject(new Error('添加的图书不合法'))
+      reject(err)
     }
   })
 }
