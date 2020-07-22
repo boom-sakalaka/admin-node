@@ -4,6 +4,8 @@ const constant = require('../utils/constant')
 const { constants } = require('crypto')
 const { json } = require('express')
 const _ = require('lodash')
+const { resolve } = require('path')
+const { reject } = require('lodash')
 
 function exists (book) {
   const { title, author, publisher } = book
@@ -68,6 +70,13 @@ function insertBook(book){
   })
 }
 
+function getBook(fileName) {
+  return new Promise((resolve,reject) => {
+    resolve({fileName})
+  })
+}
+
 module.exports = {
-  insertBook
+  insertBook,
+  getBook
 }
