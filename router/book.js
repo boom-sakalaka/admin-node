@@ -39,7 +39,20 @@ router.post('/create', (req, res, next) => {
   }).catch(err => {
     next(boom.badImplementation(err))
   })
-  
+})
+
+
+router.post('/update', (req, res, next) => {
+  const { username = ''} = decode(req)
+  if(username){
+    req.body.username = username
+  }
+  const book = new Book(null,req.body)
+  bookService.updateBook(book).then(response => {
+    new Rusult('更新电子书成功').success(res)
+  }).catch(err => {
+    next(boom.badImplementation(err))
+  })
 })
 
 
@@ -54,6 +67,22 @@ router.get('/get', (req,res,next) => {
       next(boom.badImplementation(err))
     })
   }
+})
+
+router.get('/category', (req,res,next) => {
+  bookService.getCategory().then(category => {
+    new Rusult(category,'获取分类成功').success(res)
+  }).catch(err => {
+    next(boom.badImplementation(err))
+  })
+})
+
+router.get('/list', (req, res, next) => {
+  bookService.listBook(req.query).then(({ list,count,page, pageSize }) => {
+    new Rusult({ list, count, page: +page, pageSize: +pageSize},'获取图书列表成功').success(res)
+  }).catch(err => {
+    next(boom.badImplementation(err))
+  })
 })
 
 module.exports = router

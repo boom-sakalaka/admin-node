@@ -48,6 +48,8 @@ router.get("/info", (req, res, next) => {
       } else {
         new Result('获取用户信息失败').fail(res)
       }
+    }).catch(err => {
+      next(boom.badImplementation(err))
     })
   } else {
     new Result('用户信息解析失败').fail(res)

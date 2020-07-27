@@ -1,7 +1,8 @@
 const { env } = require('./env')
 const UPLOAD_PATH = env === 'dev' ? 'G:/admin-upload-ebook' : '/root/upload/admin-upload/ebook'
 const MIME_TYPE_EPUB = 'application/epub+zip'
-const UPLOAD_URL = env === 'dev' ? 'https://book.guzhihao.cn/' : 'https://www.guzhihao.cn/'
+const UPLOAD_URL = env === 'dev' ? 'https://book.guzhihao.cn' : 'https://www.guzhihao.cn'
+const OLD_UPLOAD_URL = env === 'dev' ? 'https://book.guzhihao.cn/book/res/img' : 'https://www.guzhihao.cn/book/res/img'
 module.exports = {
   CODE_ERROR: -1,
   CODE_SUCCESS: 0,
@@ -12,5 +13,6 @@ module.exports = {
   JWT_EXPIRED: 60*60,
   UPLOAD_PATH,
   MIME_TYPE_EPUB,
-  UPLOAD_URL
+  UPLOAD_URL,
+  OLD_UPLOAD_URL
 };

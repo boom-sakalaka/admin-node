@@ -3,6 +3,7 @@ const config = require('./config')
 const { debug } = require('../utils/constant')
 const { isObject } = require('../utils/index')
 const { Result } = require('express-validator')
+const { reject, entries } = require('lodash')
 
 function connect() {
   return mysql.createConnection({
@@ -10,8 +11,6 @@ function connect() {
     multipleStatements: true
   })
 }
-
-
 function querySql (sql){
   const conn = connect()
   //debug && console.log(sql)
@@ -87,9 +86,59 @@ function insert(model, tableName) {
     }
   }) 
 }
-
+function update(model,tableName,where){
+  return new Promise((resolve, reject) => {
+    if(!isObject(model)){
+      reject(new Error('插入数据失败，插入数据非对象'))
+    }else{
+      const entry = []
+      Object.keys(model).forEach((key) => {
+        if(model.hasOwnProperty(key)){
+          entry.push(`\`${key}\`='${model[key]}'`)
+        }
+      })
+      if(entry.length){
+        let sql = `UPDATE \`${tableName}\` SET`
+        sql = `${sql} ${entry.join(',')} ${where}`
+        console.log(sql)
+        const conn = connect()
+        try{
+          conn.query(sql, (err, result) => {
+            if(err){
+              // console.log(err)
+              reject(err)
+            }else {
+              resolve(result)
+            }
+          })
+        } catch (e) {
+          reject(err)
+        } finally {
+          conn.end()
+        }
+      }
+    }
+  })
+}
+function and(where, k, v){
+  if(where === 'where'){
+    return `${where} \`${k}\`='${v}'`
+  }else {
+    return `${where} and \`${k}\`='${v}'`
+  }
+}
+function andLike(where, k, v){
+  if(where === 'where'){
+    return `${where} \`${k}\` like '%${v}%'`
+  }else {
+    return `${where} and \`${k}\` like '%${v}%'`
+  }
+}
 module.exports = {
   querySql,
   queryOne,
-  insert
+  insert,
+  update,
+  and,
+  andLike
 }

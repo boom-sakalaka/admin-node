@@ -1,4 +1,4 @@
-const { MIME_TYPE_EPUB,UPLOAD_URL,UPLOAD_PATH } = require('../utils/constant')
+const { MIME_TYPE_EPUB,UPLOAD_URL,UPLOAD_PATH, OLD_UPLOAD_URL} = require('../utils/constant')
 const Epub = require('../utils/epub')
 const fs = require('fs')
 const path = require('path')
@@ -219,16 +219,7 @@ class Book {
                 chapter.id = `${src}`
                 chapters.push(chapter)
               })
-              const chapterTree = []
-              chapters.forEach(c => {
-                c.children = []
-                if(c.pid === ''){
-                  chapterTree.push(c)
-                }else{
-                  const parent = chapters.find(_ => _.navId ===c.pid)
-                  parent.children.push(c)
-                }
-              })
+              const chapterTree = Book.genContentsTree(chapters)
 
               // console.log(chapterTree)
              resolve({chapters,chapterTree})
@@ -298,6 +289,48 @@ class Book {
     }
   }
 
+  static genCoverUrl(book){
+    const { cover } = book
+    if(book.updateType == 0){
+      if(cover){
+        if(cover.startsWith('/')){
+            return `${OLD_UPLOAD_URL}${cover}`
+        }else {
+          return `${OLD_UPLOAD_URL}/${cover}`
+        }
+      }else{
+        return null
+      }
+    }else {
+      if(cover){
+        if(cover.startsWith('/')){
+          return `${UPLOAD_URL}${cover}`
+        }else {
+          return `${UPLOAD_URL}/${cover}`
+        }
+      }else {
+        return null
+      }
+    }
+  }
+
+  static genContentsTree(contents){
+    if(contents){
+      const contentsTress = []
+      contents.forEach(c => {
+        c.children = []
+        if(c.pid === ''){
+          contentsTress.push(c)
+        }else{
+            const parent = contents.find(_ => _.navId ===c.pid)
+            parent.children.push(c)
+        }
+      })
+      return contentsTress
+    }else {
+      return null
+    }
+  }
 }
 
 
