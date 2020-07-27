@@ -85,4 +85,18 @@ router.get('/list', (req, res, next) => {
   })
 })
 
+
+router.get('/delete', (req, res, next) => {
+  const {fileName} = req.query
+  if(!fileName){
+    next(boom.badRequest(new Error('参数fileName不能为空')))
+  }else{
+    bookService.deleteBook(fileName).then(book => {
+      new Rusult(book,'删除图书信息成功').success(res)
+    }).catch(err => {
+      next(boom.badImplementation(err))
+    })
+  }
+})
+
 module.exports = router

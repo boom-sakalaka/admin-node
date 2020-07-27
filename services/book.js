@@ -2,7 +2,7 @@ const Book = require('../models/Book')
 const db = require('../db')
 const constant = require('../utils/constant')
 const { constants } = require('crypto')
-const { json } = require('express')
+const { json, response } = require('express')
 const _ = require('lodash')
 const { resolve } = require('path')
 const { reject } = require('lodash')
@@ -169,10 +169,31 @@ async function listBook(query) {
   list.forEach(book => book.cover =Book.genCoverUrl(book))
   return { list, count: count[0].count, page, pageSize }
 }
+
+function deleteBook(fileName) {
+  return new Promise(async (resolve, reject) => {
+    let book = await getBook(fileName)
+    if(book){
+      if(+book.updateType === 0){
+        reject(new Error('内置电子书不能删除'))
+      }else {
+        const bookObj = new Book(null, book)
+        const sql = `delete from book where fileName='${fileName}'`
+        db.querySql(sql).then(() => {
+          bookObj.reset()
+          resolve()
+        })
+      }
+    }else {
+      reject(new Error('电子书不存在'))
+    }
+  })
+}
 module.exports = {
   insertBook,
   getBook,
   updateBook,
   getCategory,
-  listBook
+  listBook,
+  deleteBook
 }

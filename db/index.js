@@ -100,7 +100,7 @@ function update(model,tableName,where){
       if(entry.length){
         let sql = `UPDATE \`${tableName}\` SET`
         sql = `${sql} ${entry.join(',')} ${where}`
-        console.log(sql)
+        //console.log(sql)
         const conn = connect()
         try{
           conn.query(sql, (err, result) => {
